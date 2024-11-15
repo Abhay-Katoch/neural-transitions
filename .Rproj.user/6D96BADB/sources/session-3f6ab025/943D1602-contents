@@ -1,0 +1,32 @@
+---
+title: "TSNE Analysis"
+author: "Abhay Katoch"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+directory <- "~/Documents/School/Thesis/project/"
+data_folder <- "marmosets"
+
+file <- "~/Documents/School/Thesis/project/data/macaques/M3/subject_M3_scan_1.csv"
+test_scan <- read_csv(file)
+test_result <- Rtsne(test_scan, initial_dims = 5, perplexity = 30)
+result <- data.frame(x = test_result$Y[,1], y = test_result$Y[,2])
+result$row <- seq_along(result$x)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

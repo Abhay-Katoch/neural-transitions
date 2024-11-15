@@ -1,0 +1,139 @@
+---
+title: "BIOL 343: Assignment 4"
+date: "Last compiled on `r format(Sys.time(), '%A, %B %d, %Y at %H:%M %Z')`"
+author: "Jack Duff: 20254490; Abhay Katoch: 20261644; Emmeline Close: 20324093"
+output:
+  html_document: default
+---
+
+**1. Open a new project and make an R markdown document for this assignment.**
+
+```{r, "Setting Seed"}
+set.seed(1234)
+```
+
+```{r, "Importing Libraries"}
+library(tidyverse)
+library(ggtext) # For plotting figure captions
+```
+
+**2. Import the three data files (`Dataset1.csv`, `Dataset2.csv`, `Dataset3.csv`)**
+
+```{r, "Importing datasets"}
+dataset1 <- read.csv("data/Dataset1.csv")
+dataset2 <- read.csv("data/Dataset2.csv")
+dataset3 <- read.csv("data/Dataset3.csv", sep=";", dec=",")
+```
+
+**3. Inspect the data using methods outlined in the textbook (and previous assignments).**
+
+```{r, "Inspecting dataset structures"}
+dim(dataset1)
+dim(dataset2)
+dim(dataset3)
+
+str(dataset1)
+str(dataset2)
+str(dataset3)
+
+head(dataset1)
+head(dataset2)
+head(dataset3)
+
+tail(dataset1)
+tail(dataset2)
+tail(dataset3)
+
+summary(dataset1)
+summary(dataset2)
+summary(dataset3)
+```
+
+**3. (CONT'D) Use the R code to make any necessary adjustments to the data. DO NOT change the original datasets by hand! (hint: do you notice anything odd about the data with str()?)** 
+
+```{r, "Fixing dates"}
+dataset1$Date <- ymd(dataset1$Date)
+dataset2$Date <- ymd(dataset2$Date)
+dataset3$Date <- ymd(dataset3$Date)
+```
+
+**5. After you have imported the three datasets and made any necessary corrections, it’s time to combine into a single data object. Use full_join from the dplyr library to combine observations that have the same ID AND Date. As noted in the R help, you can join by two variables using by = c("a", "b").** 
+
+```{r, "Joining datasets"}
+combined_data <- full_join(dataset1, dataset2, by = c("ID", "Date")) %>%
+                 full_join(dataset3, by = c("ID", "Date"))
+```
+
+Here we check the combined data to ensure that no columns or data were lost. We relabelled `PC1.x`, `PC2.x`, `PC1.y`, and `PC2.y` to be more descriptive. 
+
+```{r, "Checking Combined data"}
+head(combined_data)
+summary(combined_data)
+
+combined_data <- combined_data %>% rename(
+  PC1.gut = PC1.x,
+  PC2.gut = PC2.x,
+  PC1.urine = PC1.y,
+  PC2.urine = PC2.y
+)
+```
+
+**6. Read the help for full_join, left_join, right_join, and inner_join. Explain in your R Markdown document how each of the outputs would differ if there was an ID number (e.g. 000000) that was only found in Dataset 1, and not Dataset 2.**
+
+```{r, "Printing help() data for full_join()"}
+?full_join()
+```
+After looking at the help documentation for full_join, left_join, right_join, and inner_join, here's how each join would deal with an ID: 000000 found only in Dataset 1 but not in Dataset 2. Full_join: Includes all records from both datasets.
+left_join: Includes all records from the left dataset (Dataset 1), adding data from Dataset 2 where matching.
+right_join: Includes all records from the right dataset (Dataset 2), adding data from Dataset 1 where matching.
+inner_join: Includes only records that are present in both datasets.
+
+**7. Use your ggplot2 skills to graph the data with PC1 on the x-axis and PC2 on the y-axis. Use different colours, shapes and/or facets to create visualizations to help you address the hypothesis proposed in the scenario you chose above (#1 or #2).** 
+
+```{r, "Plotting Gut PCA"}
+gut_PCA_plot <- combined_data %>% ggplot(
+  aes(x = PC1.gut, y = PC2.gut, color = Conc)
+) +
+  geom_point() +
+  labs(
+      x = "PC1",
+      y = "PC2",
+      color = "Concentration",
+      caption = "**Fig. 1:** Scatter plot illustrating the correlation between gut microbial composition (PC1 vs. PC2) and viral load. Each dot represents an individual patient, with colors corresponding to their CT score (viral load).",
+    ) +
+    theme(
+      plot.caption = element_textbox_simple(padding = margin(10, 10, 5, 0)),
+      axis.text = element_blank()
+    )
+
+plot(gut_PCA_plot)
+```
+
+
+```{r, "Plotting Urine PCA"}
+urine_PCA_plot <- combined_data %>% ggplot(
+  aes(x = PC1.urine, y = PC2.urine, color = Conc)
+) +
+  geom_point() +
+  labs(
+      x = "PC1",
+      y = "PC2",
+      color = "Concentration",
+      caption = "**Fig. 2:** Scatter plot depicting the association between urine metabolites (PC1 and PC2) and viral load. Each marker represents a patient, with colors indicating their CT score (viral load).",
+    ) +
+    theme(
+      plot.caption = element_textbox_simple(padding = margin(10, 10, 5, 0)),
+      axis.text = element_blank()
+    )
+
+plot(urine_PCA_plot)
+```
+
+
+**8. Write a short paragraph to explain what the data say about your hypothesis, based on visual inspection of your figures. For now, just assume that any strong patterns in the data are statistically robust. Later we’ll learn how to use statistical models to test our hypotheses.**
+
+From the visual exploration of the data, no clear relationship emerges between viral load and the gut microbial or urine metabolite profiles. Although there are some overlaps, patients with similar viral loads do not consistently group together based on their microbial or metabolite data. This suggests that other underlying factors may be at play. Further statistical analysis would be required to determine any definitive relationships. However, viral load does appear to show variation across different years, indicating a potential temporal trend.
+
+**9. Read through the scenario that you didn’t choose to analyze and compare it to the scenario that you did choose. Think about what you would do differently if you were analyzing the other scenario. Explain what this tells you about computer coding as a transferrable skill.**
+
+When we compared our chosen scenario of the infectious disease ward with the habitat restoration scenario, I see that the analysis methods would be quite similar. Both scenarios involve merging datasets by shared IDs and using similar functions to clean and analyze the data. The graphs would also follow the same basic principles, although the labels would differ based on the context. If I were analyzing the habitat restoration data, I would adjust the data structure to focus on environmental factors and how they affect wildlife. This comparison shows that even though the data sets are different, the coding techniques used in R can be applied in both situations. This shows that coding is a useful skill that can help in various fields.

@@ -1,0 +1,224 @@
+---
+title: "Assignment 8"
+author: "Emilie Hart"
+date: "2024-10-31"
+output: html_document
+---
+
+Names: Emilie Hart (20279164), 
+Emily Gillon (20270222), 
+Cameron DeBellefeuille (20324416),
+Tasman Rizzo (20352673),
+Hannah McMann (20287381),
+Matteo Ienzi (20270101)
+
+__Hypothesis__
+H1: Both native and non-native vascular plant species richness increase with island area, and elevation; but neither is influenced by distance from the mainland
+
+H2: Native vascular plant species richness also increases with years since deglaciation, but decreases with latitude and with years since isolation
+
+H3: Non-native vascular plant species richness is not influenced by years since deglaciation, latitude, or years since isolation.
+
+Libraries:
+```{r}
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(ggplot2)
+library(knitr)
+```
+
+1. Load and make sure your data is R friendly.
+
+```{r}
+getwd()
+dat <-read.csv("./05_plant_diverse_island_F2020.csv", header=T)
+```
+
+2. Datasets can contain variables that are not useful for the models and hypotheses we are testing. Create a new dataframe using dplyr that contains only the variables we need to test the three hypotheses.
+
+```{r}
+relevant_dat<- dat %>% 
+  select(Island,ntv.rich,nonntv.rich, latitude, area,elev,dist.mnland, years.isol,years.deglac)
+#revist for syntax
+```
+
+3. Then inspect the data using the usual functions. Is there anything obvious that needs data cleaning or tidying up (NAs or data typos that need correction)?
+
+```{r}
+names(relevant_dat) # good
+dim(relevant_dat)
+head(relevant_dat)
+tail(relevant_dat)
+relevant_dat <- relevant_dat %>% 
+  drop_na() # just in case
+str(relevant_dat)
+summary(relevant_dat)
+```
+
+4. Next, before you create your model, you should check that your data do not violate any assumptions. Plot the distribution of all the variables of interest using histograms. There are two ways to do this. One is to plot each histogram individually, but that’s too much coding (please don’t do this). Instead, use something like facet_wrap() or facet_grid() to plot all of them at once. To use facet_wrap() or facet_grid() you will first need to create a new dataset in long format. You can do this using the pivot_longer() function from the tidyr library. These plots do not need to be pretty but it does need to be obvious which plot is which variable and the name of each axis. These figures can be utilitarian and do not need formal axis labels or a figure caption but they do need to be interpretable by a collaborator or supervisor.
+
+
+```{r}
+long_dat <- relevant_dat %>%
+  pivot_longer(cols = -Island, names_to = "Variable", values_to = "Value") #Island wouldnt work caus its cat I think
+# Variable for character column, # values_to to specify where the data will be stored
+
+ggplot(long_dat, aes(x=Value)) + 
+  geom_histogram(bins=15) + 
+  facet_wrap(~Variable, scales = "free") + theme_classic() + labs(x="Variable", y="Frequency" )
+# looks funky and needs to be transformed
+```
+
+5. Although the predictor variables do not have to be normally distributed. It’s a good idea to transform variables that are obviously log-normal. In the text part of your R Notebook/Markdown describe any transformations that you will use based on your inspection of the histograms. Follow this by a code chunk transforming the appropriate variables and then selecting only those columns from the data frame that will go on to the next stage of analysis using dplyr i.e., remove the parent variables of any transformed variables (similar to Q3 above).
+
+```{r}
+dat_mutate <- relevant_dat %>%
+  mutate(log_area = log(area + 1),log_elev= log(elev + 1),log_years_isol = log(years.isol + 1),
+    log_years_deglac = log(years.deglac + 1)) %>%
+  select(Island, log_area, latitude, log_elev, log_years_isol, log_years_deglac, ntv.rich, nonntv.rich, dist.mnland)
+
+# check if everything looks ok by replotting
+long_dat2 <- dat_mutate %>%
+  pivot_longer(cols = -Island, names_to = "Variable", values_to = "Value")
+
+ggplot(long_dat2, aes(x = Value)) + 
+  geom_histogram(bins = 15) + 
+  facet_wrap(~Variable, scales = "free") + # still was looking weird I think caus they were using same x-axis so I changed this
+  theme_classic() + 
+  labs(x = "Variable", y = "Frequency")
+# still looks a bit funky ask in class
+```
+
+6. Next comes the univariate analyses. Run a linear regression on each of the two richness variables (ntv_rich and nonntv_rich) as response/independent variables against each of the potential predictor variables to test H1, H2 and H3. To be clear you want two sets of models, once for ntv_rich and then again for nonntv_rich.
+
+```{r}
+# Native plant
+nat1 <- lm(data = dat_mutate, ntv.rich ~ log_area)
+summary(nat1)
+nat2 <- lm(data = dat_mutate, ntv.rich ~ latitude)
+summary(nat2)
+nat3 <- lm(data = dat_mutate, ntv.rich ~ log_elev)
+summary(nat3)
+nat4 <- lm(data = dat_mutate, ntv.rich ~ dist.mnland)
+summary(nat4)
+nat5 <- lm(data = dat_mutate, ntv.rich ~ log_years_isol)
+summary(nat5)
+nat6 <- lm(data = dat_mutate, ntv.rich ~ log_years_deglac)
+summary(nat6)
+
+# Non-native plant
+nonnat1 <- lm(data = dat_mutate, nonntv.rich ~ log_area)
+summary(nonnat1)
+nonnat2 <- lm(data = dat_mutate, nonntv.rich ~ latitude)
+summary(nonnat2)
+nonnat3 <- lm(data = dat_mutate, nonntv.rich ~ log_elev)
+summary(nonnat3)
+nonnat4 <- lm(data = dat_mutate, nonntv.rich ~ dist.mnland)
+summary(nonnat4)
+nonnat5 <- lm(data = dat_mutate, nonntv.rich ~ log_years_isol)
+summary(nonnat5)
+nonnat6 <- lm(data = dat_mutate, nonntv.rich ~ log_years_deglac)
+summary(nonnat6)
+```
+
+7. Based on your univariate analyses, summarize your findings with respect to H2 and H3. Are the hypotheses supported? why?
+
+
+__H2: Native vascular plant species richness also increases with years since deglaciation, but decreases with latitude and with years since isolation__
+
+If this hypothesis was correct we would expect to see a positive relationship between native species richness and years since deglaciation, but a negative relationship between native species richness and latitude, as well as years since isolation. The relationship between native plant richness and years since deglaciation was significantly positive (slope=1012.7, p=0.0327). The relationship between native and latitude as well as native and years since isolation were both insignificant (p=0.278 and p=0.146). In summary, part of this hypothesis is correct and part is incorrect, so we fail to reject the null. Native richness only increases with years since deglaciation, but does not change significantly with latitude or years since isolation.
+
+H3: Non-native vascular plant species richness is not influenced by years since deglaciation, latitude, or years since isolation
+
+If this hypothesis was correct we would expect no significance between non-native vascular plant richness and years since deglaciation, latitude, and years since isolation. All models show no significant correlations (p=0.08607, p=0.412, and p=0.224) thus we fail to reject the null and conclude no significant influence. 
+
+
+We reject the null for H3, non-native vascular plant species richness are not influenced by the 3 listed variables. Although they have a slope the slopes are not significant.
+
+
+8. Create a model that includes all the important predictor varaibles to test H1 and run a summary of your model. Based on the results for H1 obtained in Q6: Identify wether there are collinearity issues between variables. In a section of text describe which variables if any show colinearity and why.
+
+__Reminder:__ H1: Both native and non-native vascular plant species richness increase with island area, and elevation; but neither is influenced by distance from the mainland
+
+```{r}
+# Make 2 models one for native and one for non-native
+# native model 
+native_mod <- lm(ntv.rich ~ log_area + log_elev + dist.mnland, data = dat_mutate)
+
+# non native model
+NonNative_mod <- lm(nonntv.rich ~ log_area + log_elev + dist.mnland, data = dat_mutate)
+
+summary(native_mod)
+summary(NonNative_mod)
+
+# To ID if there is co linearity issues between variables
+cor(dat_mutate %>% 
+     select(log_area, log_elev, dist.mnland))
+# high cor= co linearity ~0.7+
+# area and elevation are co linear
+```
+
+H1:
+- native model:
++ log area is postive slope and sig 
++ elev is not sig but negative slope
++ log mnland is not sig but postive slope
++ F stat (model sig) is sig 
+
+- non-nat model:
++ log area is sig and pos
++ elev non sig and  pos
++ mnland non sig and neg 
++ F stat means mod is sig 
+
+Co linearity comments:
+- there is high for colinearity for area and elevation are most closely correlkated (cor=0.8297398)
+- we could exclude a varaiable,  I would choose to exclude log area to check if log mainland and evleation are correletated and thats why they dont show significant effects in the previosu two models.
+
+
+9. Plot the 3 univariate scatterplots in a single composite plot for each response variable with all three graphs (hint: see multi-graph section of the ggplot2 tutorial). All axes must be labeled and aligned properly. Add linear regression lines to plots ONLY when the linear regression is significant (P < 0.05 from step #7). Make this graph as professional and thoughtfully laid out as possible. All axes of the individual graph panels must be tweaked and properly labelled (or de-labelled) using the scale_… functions, and the style of the graphs should be modified with the theme() function. Include suitable-for-publication figure captions.
+
+```{r}
+# Native richness plots
+native_area <- ggplot(dat_mutate, aes(x = log_area, y = ntv.rich)) + geom_point() + geom_smooth(method = "lm", size = 2) + # area is sig
+  labs(x = "Log of Area of Island", y = "Native Species Richness") +
+  theme_classic()
+
+native_elev <- ggplot(dat_mutate, aes(x = log_elev, y = ntv.rich)) + geom_point() + labs(x = "Elevation (m)", y = "") + theme_classic() # not sig
+
+native_mnland <- ggplot(dat_mutate, aes(x = dist.mnland, y = ntv.rich)) + geom_point() + labs(x = "Log of Distance from Mainland (km)", y = "") + theme_classic()
+
+# Non-native richness plots
+non_native_area <- ggplot(dat_mutate, aes(x = log_area, y = nonntv.rich)) + geom_point() + geom_smooth(method = "lm", size = 2) + labs(x = "Log of Area of Island", y = "Non-Native Species Richness") + theme_classic()
+
+non_native_elev <- ggplot(dat_mutate, aes(x = log_elev, y = nonntv.rich)) + geom_point() + labs(x = "Elevation (m)", y = "") + theme_classic()
+
+non_native_mnland <- ggplot(dat_mutate, aes(x = dist.mnland, y = nonntv.rich)) + geom_point() + labs(x = "Log of Distance from Mainland (km)", y = "") +
+  theme_classic()
+
+# put combined plots together
+library(gridExtra)
+grid.arrange(native_area, native_elev, native_mnland,
+  non_native_area, non_native_elev, non_native_mnland,
+  ncol = 3)
+```
+
+__Fig.1.__ Predictive variables (Area of Island, Elevation (m), and Distance from mainland) are plotted against species richness. The first column of graphs represents Native species richness whereas the bottom column represents non-native species richness.Each dot represents a score of species richness for a given island. A regression line is plotted for any variables that are significant predictors of species richness. Area of the Island measured in hectares was log stransformed for both predictor groups; elevation was measured in m above sea level and the distance from the main land was calulcated in km. The data comes from data a study carried out by Robert T. McMaster. McMaster from a system of 22 island off of the east coast of North America.
+
+10. Run quality checks on each of your two models (Q8) to look for violations of the assumptions. Each quality check should include a q-q plot, residuals vs. prediction, and Cook’s test for outliers. 
+
+```{r}
+library(ggfortify)
+# Majo said to do this
+autoplot(native_mod, which = 1:4)
+autoplot(NonNative_mod, which = 1:4)
+```
+
+```{r}
+
+```
+
+
+

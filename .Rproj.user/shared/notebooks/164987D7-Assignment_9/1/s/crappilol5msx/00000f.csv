@@ -1,0 +1,12 @@
+"0","data <- read_csv(""~/Documents/School/BIOL343/Assignment_8/05_plant_diverse_island_F2020.csv"")"
+"1","[1mRows: [22m[34m22[39m [1mColumns: [22m[34m15[39m
+"
+"1","[36m──[39m [1mColumn specification[22m [36m───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m  (1): Island
+[32mdbl[39m (14): tot.rich, ntv.rich, nonntv.rich, pct.nonntv, area, latitude, elev, dist.mnland, dist.island, soil.types, years.isol, years.deglac, human.pop, human.dens
+"
+"1","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message.
+"
