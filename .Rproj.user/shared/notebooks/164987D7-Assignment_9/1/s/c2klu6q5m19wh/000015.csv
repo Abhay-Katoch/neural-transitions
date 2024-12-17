@@ -1,2 +1,0 @@
-"0","native_mod <- lm(ntv.rich ~ log_area + log_elev + dist.mnland, data = mutated_data)"
-"0","non_native_mod <- lm(nonntv.rich ~ log_area + log_elev + dist.mnland, data = mutated_data)"
